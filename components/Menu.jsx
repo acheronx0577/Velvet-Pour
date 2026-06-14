@@ -3,67 +3,191 @@
 import { useRef, useState } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
+import { ScrollTrigger } from "gsap/all";
+import { useLenis } from "lenis/react";
 
 import { allCocktails } from "@/constants";
 
+gsap.registerPlugin(ScrollTrigger);
+
+const SCROLL_DURATION = 0.9;
+const SCROLL_EASING = (t) => Math.min(1, 1.001 - 2 ** (-10 * t));
+const SCROLL_STEP_VH = 70;
+
+const RecipeContent = ({ cocktail, titleId }) => (
+  <>
+    <div className="info">
+      <p>Recipe for:</p>
+      <p className="cocktail-name" id={titleId}>
+        {cocktail.name}
+      </p>
+    </div>
+
+    <div className="details">
+      <h2>{cocktail.title}</h2>
+      <p>{cocktail.description}</p>
+    </div>
+  </>
+);
+
 const Menu = () => {
-  const contentRef = useRef(null);
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const sectionRef = useRef(null);
+  const tabsRef = useRef(null);
+  const menuScrollRef = useRef(null);
+  const trackRef = useRef(null);
+  const recipeTrackRef = useRef(null);
+  const displayIndexRef = useRef(0);
+
+  const [displayIndex, setDisplayIndex] = useState(0);
+  const lenis = useLenis();
+
+  const totalCocktails = allCocktails.length;
+  const slideOffset = (progress) => -(progress * 100) / totalCocktails;
+
+  const updateSlideVisuals = (progress) => {
+    const track = trackRef.current;
+    const recipeTrack = recipeTrackRef.current;
+
+    if (!track || !recipeTrack) return;
+
+    const clampedProgress = gsap.utils.clamp(
+      0,
+      totalCocktails - 1,
+      progress
+    );
+    const offset = slideOffset(clampedProgress);
+
+    gsap.set(track, { xPercent: offset });
+    gsap.set(recipeTrack, { xPercent: offset });
+
+    const rounded = Math.round(clampedProgress);
+    if (rounded !== displayIndexRef.current) {
+      displayIndexRef.current = rounded;
+      setDisplayIndex(rounded);
+    }
+  };
 
   useGSAP(
     () => {
-      gsap.fromTo("#title", { opacity: 0 }, { opacity: 1, duration: 1 });
-      gsap.fromTo(
-        ".cocktail img",
-        { opacity: 0, xPercent: -100 },
-        {
-          xPercent: 0,
-          opacity: 1,
-          duration: 1,
-          ease: "power1.inOut",
-        }
-      );
-      gsap.fromTo(
-        ".details h2",
-        { yPercent: 100, opacity: 0 },
-        {
-          yPercent: 0,
-          opacity: 100,
-          ease: "power1.inOut",
-        }
-      );
-      gsap.fromTo(
-        ".details p",
-        { yPercent: 100, opacity: 0 },
-        {
-          yPercent: 0,
-          opacity: 100,
-          ease: "power1.inOut",
-        }
-      );
+      updateSlideVisuals(0);
     },
-    { dependencies: [currentIndex] }
+    { scope: sectionRef }
   );
 
-  const totalCocktails = allCocktails.length;
+  useGSAP(
+    () => {
+      const section = sectionRef.current;
+      if (!section || totalCocktails <= 1) return;
+
+      const mm = gsap.matchMedia();
+
+      const createMenuScroll = (start) => {
+        const tabs = tabsRef.current;
+
+        if (tabs) {
+          gsap.fromTo(
+            tabs,
+            { y: -36 },
+            {
+              y: 0,
+              ease: "power1.out",
+              scrollTrigger: {
+                trigger: section,
+                start,
+                end: "+=14%",
+                scrub: 0.5,
+                invalidateOnRefresh: true,
+              },
+            }
+          );
+        }
+
+        const st = ScrollTrigger.create({
+          id: "menu-slider",
+          trigger: section,
+          start,
+          end: `+=${(totalCocktails - 1) * SCROLL_STEP_VH}%`,
+          pin: true,
+          scrub: 0.6,
+          anticipatePin: 1,
+          invalidateOnRefresh: true,
+          snap: {
+            snapTo: 1 / (totalCocktails - 1),
+            duration: { min: 0.35, max: 0.75 },
+            delay: 0.08,
+            ease: "power1.inOut",
+          },
+          onUpdate: (self) => {
+            updateSlideVisuals(self.progress * (totalCocktails - 1));
+          },
+        });
+
+        menuScrollRef.current = st;
+        updateSlideVisuals(st.progress * (totalCocktails - 1));
+      };
+
+      mm.add(
+        {
+          mobile:
+            "(max-width: 767px) and (prefers-reduced-motion: no-preference)",
+          desktop:
+            "(min-width: 768px) and (prefers-reduced-motion: no-preference)",
+        },
+        (context) => {
+          const { mobile } = context.conditions;
+          createMenuScroll(mobile ? "top 12%" : "top top");
+        }
+      );
+
+      mm.add("(prefers-reduced-motion: reduce)", () => {
+        updateSlideVisuals(displayIndexRef.current);
+      });
+
+      return () => {
+        menuScrollRef.current = null;
+        mm.revert();
+      };
+    },
+    { scope: sectionRef }
+  );
+
+  const scrollToIndex = (index) => {
+    const newIndex = (index + totalCocktails) % totalCocktails;
+    const st = menuScrollRef.current;
+
+    if (!st) {
+      displayIndexRef.current = newIndex;
+      setDisplayIndex(newIndex);
+      updateSlideVisuals(newIndex);
+      return;
+    }
+
+    const progress =
+      totalCocktails > 1 ? newIndex / (totalCocktails - 1) : 0;
+    const y = st.start + progress * (st.end - st.start);
+
+    if (lenis) {
+      lenis.scrollTo(y, { duration: SCROLL_DURATION, easing: SCROLL_EASING });
+    } else {
+      window.scrollTo({ top: y, behavior: "smooth" });
+    }
+  };
 
   const goToSlide = (index) => {
-    const newIndex = (index + totalCocktails) % totalCocktails;
-    setCurrentIndex(newIndex);
+    scrollToIndex(index);
   };
 
   const getCocktailAt = (indexOffset) => {
     return allCocktails[
-      (currentIndex + indexOffset + totalCocktails) % totalCocktails
+      (displayIndex + indexOffset + totalCocktails) % totalCocktails
     ];
   };
 
-  const currentCocktail = getCocktailAt(0);
   const prevCocktail = getCocktailAt(-1);
   const nextCocktail = getCocktailAt(1);
 
   return (
-    <section id="menu" aria-labelledby="menu-heading">
+    <section ref={sectionRef} id="menu" aria-labelledby="menu-heading">
       <img src="/images/slider-left-leaf.png" alt="left-leaf" id="m-left-leaf" />
       <img
         src="/images/slider-right-leaf.png"
@@ -75,9 +199,13 @@ const Menu = () => {
         Cocktail Menu
       </h2>
 
-      <nav className="cocktail-tabs" aria-label="Cocktail Navigation">
+      <nav
+        ref={tabsRef}
+        className="cocktail-tabs"
+        aria-label="Cocktail Navigation"
+      >
         {allCocktails.map((cocktail, index) => {
-          const isActive = index === currentIndex;
+          const isActive = index === displayIndex;
 
           return (
             <button
@@ -99,7 +227,7 @@ const Menu = () => {
         <div className="arrows">
           <button
             className="text-left"
-            onClick={() => goToSlide(currentIndex - 1)}
+            onClick={() => goToSlide(displayIndex - 1)}
           >
             <span>{prevCocktail.name}</span>
             <img
@@ -111,7 +239,7 @@ const Menu = () => {
 
           <button
             className="text-left"
-            onClick={() => goToSlide(currentIndex + 1)}
+            onClick={() => goToSlide(displayIndex + 1)}
           >
             <span>{nextCocktail.name}</span>
             <img
@@ -123,18 +251,38 @@ const Menu = () => {
         </div>
 
         <div className="cocktail">
-          <img src={currentCocktail.image} className="object-contain" alt="" />
+          <div
+            className="cocktail-stage"
+            style={{ "--menu-slide-count": totalCocktails }}
+          >
+            <div ref={trackRef} className="cocktail-track">
+              {allCocktails.map((cocktail) => (
+                <img
+                  key={cocktail.id}
+                  src={cocktail.image}
+                  className="cocktail-slide object-contain"
+                  alt=""
+                />
+              ))}
+            </div>
+          </div>
         </div>
 
-        <div className="recipe">
-          <div ref={contentRef} className="info">
-            <p>Recipe for:</p>
-            <p id="title">{currentCocktail.name}</p>
-          </div>
-
-          <div className="details">
-            <h2>{currentCocktail.title}</h2>
-            <p>{currentCocktail.description}</p>
+        <div
+          className="recipe"
+          style={{ "--menu-slide-count": totalCocktails }}
+        >
+          <div className="recipe-stage">
+            <div ref={recipeTrackRef} className="recipe-track">
+              {allCocktails.map((cocktail, index) => (
+                <div key={cocktail.id} className="recipe-panel">
+                  <RecipeContent
+                    cocktail={cocktail}
+                    titleId={index === displayIndex ? "title" : undefined}
+                  />
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
