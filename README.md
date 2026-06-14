@@ -1,7 +1,7 @@
 <div align="center">
   <br />
   <a href="https://velvet-pour-five-self.vercel.app/" target="_blank" rel="noopener noreferrer">
-    <img src="1.png" alt="Velvet Pour — GSAP Cocktail Website">
+    <img src="MockUp/1.png" alt="Velvet Pour — GSAP Cocktail Website">
   </a>
   <br />
   <br />
