@@ -736,12 +736,15 @@ html::-webkit-scrollbar {
             padding-bottom: max(clamp(4.5rem, 9vh, 7rem), env(safe-area-inset-bottom));
 
             h2 {
-                @apply mx-auto max-w-5xl font-modern-negra leading-[0.9];
+                @apply mx-auto w-full max-w-5xl px-1 font-modern-negra leading-[0.9];
 
-                font-size: clamp(3.25rem, 6.8vw, 6.5rem);
+                font-size: clamp(2.35rem, 10vw, 6.5rem);
 
                 .contact-hero-user {
-                    @apply block wrap-break-word font-sans tabular-nums sm:inline;
+                    @apply block min-w-0 max-w-full font-sans tabular-nums sm:inline;
+
+                    font-size: clamp(1.35rem, 6.8vw, 3.75rem);
+                    overflow-wrap: anywhere;
                 }
             }
 
@@ -755,7 +758,7 @@ html::-webkit-scrollbar {
         }
 
         .contact-grid {
-            @apply grid w-full max-w-6xl mx-auto items-center gap-10 lg:grid-cols-[minmax(0,0.9fr)_minmax(320px,1.1fr)] lg:gap-12 xl:max-w-7xl xl:gap-16 2xl:max-w-352 2xl:gap-20;
+            @apply grid w-full min-w-0 max-w-6xl mx-auto items-center gap-10 lg:grid-cols-[minmax(0,0.9fr)_minmax(320px,1.1fr)] lg:gap-12 xl:max-w-7xl xl:gap-16 2xl:max-w-352 2xl:gap-20;
         }
 
         .contact-info {
@@ -803,7 +806,7 @@ html::-webkit-scrollbar {
         }
 
         .contact-form {
-            @apply relative z-10 order-1 flex flex-col gap-5 rounded-3xl border border-white/10 bg-white/6 p-5 text-left backdrop-blur-sm sm:p-6 md:p-8 lg:order-2 xl:gap-7 xl:p-9 2xl:gap-8 2xl:rounded-4xl 2xl:p-10;
+            @apply relative z-10 order-1 flex min-w-0 flex-col gap-5 rounded-3xl border border-white/10 bg-white/6 p-5 text-left backdrop-blur-sm sm:p-6 md:p-8 lg:order-2 xl:gap-7 xl:p-9 2xl:gap-8 2xl:rounded-4xl 2xl:p-10;
         }
 
         .contact-form--locked {
@@ -811,10 +814,10 @@ html::-webkit-scrollbar {
         }
 
         .contact-form-head {
-            @apply space-y-2;
+            @apply min-w-0 space-y-2;
 
             h3 {
-                @apply mb-0 flex flex-wrap items-baseline gap-x-3 gap-y-1 text-left normal-case tracking-wide text-white;
+                @apply mb-0 flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1 text-left normal-case tracking-wide text-white;
 
                 font-size: clamp(1.85rem, 3.2vw, 3rem);
                 line-height: 0.95;
@@ -825,11 +828,10 @@ html::-webkit-scrollbar {
             }
 
             .contact-user-name {
-                @apply min-w-0 font-sans tabular-nums;
+                @apply min-w-0 max-w-full font-sans tabular-nums;
 
-                font-size: clamp(1.75rem, 3vw, 2.8rem);
-                overflow-wrap: normal;
-                word-break: normal;
+                font-size: clamp(1.15rem, 5.5vw, 2.8rem);
+                overflow-wrap: anywhere;
             }
 
             .form-hint {
