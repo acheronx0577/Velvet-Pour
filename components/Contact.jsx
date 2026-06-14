@@ -6,6 +6,8 @@ import gsap from "gsap";
 import { useEffect, useRef, useState } from "react";
 
 import { barAddress, barEmail, barPhone, openingHours, socials } from "@/constants";
+import { useContactRateLimitCooldown } from "@/lib/contact/contact-cooldown";
+import { CONTACT_RATE_LIMIT_MESSAGE } from "@/lib/contact/contact-rate-limit-shared";
 
 const CONTACT_USER = "AcheronX0577";
 
@@ -29,10 +31,32 @@ const Contact = () => {
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const formLoadedAtRef = useRef(0);
+  const {
+    isRateLimited,
+    cooldownLabel,
+    applyRateLimit,
+    clearRateLimit,
+  } = useContactRateLimitCooldown();
+
+  const formDisabled = status === "submitting" || isRateLimited;
 
   useEffect(() => {
     formLoadedAtRef.current = Date.now();
   }, []);
+
+  useEffect(() => {
+    if (isRateLimited) {
+      setStatus("rate_limited");
+      setError("");
+      setSuccessMessage("");
+      return;
+    }
+
+    if (status === "rate_limited") {
+      setStatus("idle");
+      setError("");
+    }
+  }, [isRateLimited, status]);
 
   useGSAP(() => {
     const titleSplit = SplitText.create("#contact h2", { type: "words" });
@@ -77,6 +101,8 @@ const Contact = () => {
   });
 
   const handleChange = (event) => {
+    if (isRateLimited) return;
+
     const { name, value } = event.target;
     setForm((prev) => ({ ...prev, [name]: value }));
     if (status === "error" || status === "success") {
@@ -90,6 +116,11 @@ const Contact = () => {
     event.preventDefault();
     setError("");
     setSuccessMessage("");
+
+    if (isRateLimited) {
+      setStatus("rate_limited");
+      return;
+    }
 
     if (!form.name.trim() || !form.email.trim() || !form.message.trim()) {
       setStatus("error");
@@ -125,6 +156,13 @@ const Contact = () => {
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok || data.ok === false) {
+        if (data.rateLimited === true) {
+          applyRateLimit(data);
+          setStatus("rate_limited");
+          setError("");
+          return;
+        }
+
         setStatus("error");
         setError(
           typeof data.error === "string"
@@ -133,6 +171,8 @@ const Contact = () => {
         );
         return;
       }
+
+      clearRateLimit();
 
       setStatus("success");
       setSuccessMessage(
@@ -206,10 +246,11 @@ const Contact = () => {
           </div>
 
           <form
-            className="contact-form"
+            className={`contact-form${isRateLimited ? " contact-form--locked" : ""}`}
             onSubmit={handleSubmit}
             noValidate
             aria-busy={status === "submitting"}
+            aria-disabled={isRateLimited}
           >
             <div className="contact-form-head">
               <p className="contact-form-eyebrow">Private message</p>
@@ -231,7 +272,7 @@ const Contact = () => {
                   name="_gotcha"
                   tabIndex={-1}
                   autoComplete="off"
-                  disabled={status === "submitting"}
+                  disabled={formDisabled}
                 />
               </label>
               <label className="contact-field">
@@ -244,7 +285,7 @@ const Contact = () => {
                   autoComplete="name"
                   placeholder="Your name"
                   required
-                  disabled={status === "submitting"}
+                  disabled={formDisabled}
                 />
               </label>
 
@@ -258,7 +299,7 @@ const Contact = () => {
                   autoComplete="email"
                   placeholder="you@example.com"
                   required
-                  disabled={status === "submitting"}
+                  disabled={formDisabled}
                 />
               </label>
 
@@ -271,10 +312,21 @@ const Contact = () => {
                   placeholder={`Write your message to ${CONTACT_USER}...`}
                   rows={4}
                   required
-                  disabled={status === "submitting"}
+                  disabled={formDisabled}
                 />
               </label>
             </div>
+
+            {isRateLimited ? (
+              <p
+                className="contact-form-feedback contact-form-feedback--cooldown"
+                role="alert"
+                aria-live="polite"
+              >
+                {CONTACT_RATE_LIMIT_MESSAGE} Wait{" "}
+                <span className="contact-cooldown-timer">{cooldownLabel}</span>.
+              </p>
+            ) : null}
 
             {status === "error" && error ? (
               <p className="contact-form-feedback contact-form-feedback--error" role="alert">
@@ -295,9 +347,13 @@ const Contact = () => {
             <button
               type="submit"
               className="contact-form-submit"
-              disabled={status === "submitting"}
+              disabled={formDisabled}
             >
-              {status === "submitting" ? "Sending..." : "Send request"}
+              {status === "submitting"
+                ? "Sending..."
+                : isRateLimited
+                  ? `Wait ${cooldownLabel}`
+                  : "Send request"}
             </button>
           </form>
         </div>

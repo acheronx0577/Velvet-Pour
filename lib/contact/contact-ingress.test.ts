@@ -8,6 +8,26 @@ const ORIGINAL_PUBLIC_SITE = process.env.NEXT_PUBLIC_CONVEX_SITE_URL;
 const ORIGINAL_PUBLIC_URL = process.env.NEXT_PUBLIC_CONVEX_URL;
 const ORIGINAL_SECRET = process.env.CONTACT_INGRESS_SECRET;
 
+const SAMPLE_INGRESS_PAYLOAD = {
+  name: "Ada",
+  email: "ada@example.com",
+  message: "Hello",
+  ipHint: "203.0.113.44",
+};
+
+async function captureIngressForward() {
+  const { captured, restore } = stubFetch(
+    new Response(JSON.stringify({ ok: true, id: "sub_1" }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    }),
+  );
+
+  await forwardContactToConvex(SAMPLE_INGRESS_PAYLOAD);
+  restore();
+  return captured;
+}
+
 describe("forwardContactToConvex", () => {
   afterEach(() => {
     if (ORIGINAL_SITE === undefined) {
@@ -65,20 +85,7 @@ describe("forwardContactToConvex", () => {
     process.env.CONVEX_SITE_URL = "https://greedy-poodle-482.convex.cloud";
     process.env.CONTACT_INGRESS_SECRET = "test-secret";
 
-    const { captured, restore } = stubFetch(
-      new Response(JSON.stringify({ ok: true, id: "sub_1" }), {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      }),
-    );
-
-    await forwardContactToConvex({
-      name: "Ada",
-      email: "ada@example.com",
-      message: "Hello",
-      ipHint: "203.0.113.44",
-    });
-    restore();
+    const captured = await captureIngressForward();
 
     assert.equal(captured.url, "https://greedy-poodle-482.convex.site/contact");
   });
@@ -89,20 +96,7 @@ describe("forwardContactToConvex", () => {
     process.env.NEXT_PUBLIC_CONVEX_URL = "https://greedy-poodle-482.convex.cloud";
     process.env.CONTACT_INGRESS_SECRET = "test-secret";
 
-    const { captured, restore } = stubFetch(
-      new Response(JSON.stringify({ ok: true, id: "sub_1" }), {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      }),
-    );
-
-    await forwardContactToConvex({
-      name: "Ada",
-      email: "ada@example.com",
-      message: "Hello",
-      ipHint: "203.0.113.44",
-    });
-    restore();
+    const captured = await captureIngressForward();
 
     assert.equal(captured.url, "https://greedy-poodle-482.convex.site/contact");
   });
@@ -156,20 +150,7 @@ describe("forwardContactToConvex", () => {
     process.env.CONVEX_SITE_URL = "http://127.0.0.1:3210";
     process.env.CONTACT_INGRESS_SECRET = "test-secret";
 
-    const { captured, restore } = stubFetch(
-      new Response(JSON.stringify({ ok: true, id: "sub_1" }), {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      }),
-    );
-
-    await forwardContactToConvex({
-      name: "Ada",
-      email: "ada@example.com",
-      message: "Hello",
-      ipHint: "203.0.113.44",
-    });
-    restore();
+    const captured = await captureIngressForward();
 
     assert.equal(captured.url, "http://127.0.0.1:3211/contact");
   });
