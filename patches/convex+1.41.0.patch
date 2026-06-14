@@ -1,0 +1,29 @@
+diff --git a/node_modules/convex/dist/cli.bundle.cjs b/node_modules/convex/dist/cli.bundle.cjs
+index 74fbf3c..d912bfc 100644
+--- a/node_modules/convex/dist/cli.bundle.cjs
++++ b/node_modules/convex/dist/cli.bundle.cjs
+@@ -133327,21 +133327,21 @@ function stylesFor(dtype) {
+         label: "Development",
+         bg: "#d2ecbb",
+         fg: "#2b6536",
+-        bar: "#3ea34b"
++        bar: "#ffffff"
+       };
+     case "local":
+       return {
+         label: "Local",
+         bg: "#d2ecbb",
+         fg: "#2b6536",
+-        bar: "#3ea34b"
++        bar: "#ffffff"
+       };
+     case "anonymous":
+       return {
+         label: "Local",
+         bg: "#d2ecbb",
+         fg: "#2b6536",
+-        bar: "#3ea34b"
++        bar: "#ffffff"
+       };
+     case "preview":
+       return {
