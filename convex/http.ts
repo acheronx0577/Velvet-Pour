@@ -39,7 +39,23 @@ async function submitContact(ctx: ActionCtx, body: Record<string, unknown>) {
     return jsonResponse({ ok: false, error: "Invalid client identity." }, 400);
   }
 
-  const ipHash = await hashIp(ipHint);
+  let ipHash: string;
+  try {
+    ipHash = await hashIp(ipHint);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Invalid client identity.";
+    const missingSalt = message.includes("RATE_LIMIT_SALT");
+    return jsonResponse(
+      {
+        ok: false,
+        error: missingSalt
+          ? "Contact rate limiting is not configured on Convex."
+          : "Invalid client identity.",
+      },
+      missingSalt ? 503 : 400,
+    );
+  }
+
   const rate = await ctx.runMutation(internal.contact.prepareIngress, { ipHash });
   if (rate.limited) {
     return jsonResponse(

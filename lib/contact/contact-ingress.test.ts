@@ -78,7 +78,7 @@ describe("forwardContactToConvex", () => {
   });
 
   it("allows local Convex HTTP action URLs during development", async () => {
-    process.env.CONVEX_SITE_URL = "http://127.0.0.1:3210";
+    process.env.CONVEX_SITE_URL = "http://127.0.0.1:3211";
     process.env.CONTACT_INGRESS_SECRET = "test-secret";
 
     const { captured, restore } = stubFetch(
@@ -96,8 +96,30 @@ describe("forwardContactToConvex", () => {
     });
     restore();
 
-    assert.equal(captured.url, "http://127.0.0.1:3210/contact");
+    assert.equal(captured.url, "http://127.0.0.1:3211/contact");
     assert.equal("ok" in (result as object) && (result as { ok: boolean }).ok, true);
+  });
+
+  it("remaps local Convex API port 3210 to HTTP site port 3211", async () => {
+    process.env.CONVEX_SITE_URL = "http://127.0.0.1:3210";
+    process.env.CONTACT_INGRESS_SECRET = "test-secret";
+
+    const { captured, restore } = stubFetch(
+      new Response(JSON.stringify({ ok: true, id: "sub_1" }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+
+    await forwardContactToConvex({
+      name: "Ada",
+      email: "ada@example.com",
+      message: "Hello",
+      ipHint: "203.0.113.44",
+    });
+    restore();
+
+    assert.equal(captured.url, "http://127.0.0.1:3211/contact");
   });
 });
 

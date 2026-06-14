@@ -4,13 +4,14 @@ import {
   CONTACT_RATE_LIMIT_MAX,
   contactRateRetryAfterMs,
   pruneContactRateTimestamps,
+  saturateContactRateTimestamps,
 } from "./contact-rate-limit-shared.ts";
 
 const buckets = new Map<string, number[]>();
 
 export type ContactRateLimitEvaluation =
   | { allowed: true; cookieTimestamps: number[] }
-  | { allowed: false; retryAfterMs: number };
+  | { allowed: false; retryAfterMs: number; cookieTimestamps: number[] };
 
 function readContactRateLimitState(request: Request, now: number) {
   const ip = getClientIp(request);
@@ -67,7 +68,14 @@ export function evaluateContactRateLimit(request: Request): ContactRateLimitEval
 
   if (retryAfterMs !== null) {
     buckets.set(ip, ipTimestamps);
-    return { allowed: false, retryAfterMs };
+    return {
+      allowed: false,
+      retryAfterMs,
+      cookieTimestamps: saturateContactRateTimestamps(
+        [...cookieTimestamps, ...ipTimestamps],
+        now,
+      ),
+    };
   }
 
   const nextTimestamps = [...cookieTimestamps, now];

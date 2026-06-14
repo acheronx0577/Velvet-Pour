@@ -22,3 +22,18 @@ export function contactRateRetryAfterMs(
     Math.min(...active) + CONTACT_RATE_LIMIT_WINDOW_MS - now,
   );
 }
+
+/** Fill the sliding window so Next.js blocks match Convex-side limits. */
+export function saturateContactRateTimestamps(
+  timestamps: number[],
+  now = Date.now(),
+) {
+  const active = pruneContactRateTimestamps(timestamps, now);
+  if (active.length >= CONTACT_RATE_LIMIT_MAX) return active;
+
+  const padded = [...active];
+  while (padded.length < CONTACT_RATE_LIMIT_MAX) {
+    padded.push(now);
+  }
+  return padded;
+}

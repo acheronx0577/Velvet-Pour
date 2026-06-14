@@ -68,6 +68,7 @@ describe("evaluateContactRateLimit", () => {
     assert.equal(result.allowed, false);
     if (!result.allowed) {
       assert.ok(result.retryAfterMs > 0);
+      assert.equal(result.cookieTimestamps.length, 3);
     }
   });
 });

@@ -19,10 +19,28 @@ type IngressResult = {
 };
 
 const CONVEX_SITE_HOST = /\.convex\.(site|cloud)$/i;
+const LOCAL_CONVEX_API_PORT = "3210";
+const LOCAL_CONVEX_SITE_PORT = "3211";
 const INGRESS_TIMEOUT_MS = 10_000;
 
 export function signIpHint(ipHint: string, secret: string) {
   return createHmac("sha256", secret).update(ipHint).digest("hex");
+}
+
+function normalizeLocalConvexSiteUrl(origin: string) {
+  try {
+    const url = new URL(origin);
+    const isLocal =
+      url.protocol === "http:" &&
+      (url.hostname === "127.0.0.1" || url.hostname === "localhost");
+    if (isLocal && url.port === LOCAL_CONVEX_API_PORT) {
+      url.port = LOCAL_CONVEX_SITE_PORT;
+      return url.origin;
+    }
+    return origin;
+  } catch {
+    return origin;
+  }
 }
 
 // fallow-ignore-next-line complexity
@@ -35,7 +53,7 @@ function parseConvexSiteUrl(raw: string | undefined) {
     const isLocal =
       url.protocol === "http:" &&
       (url.hostname === "127.0.0.1" || url.hostname === "localhost");
-    if (isLocal) return url.origin;
+    if (isLocal) return normalizeLocalConvexSiteUrl(url.origin);
     if (url.protocol !== "https:") return "";
     if (!CONVEX_SITE_HOST.test(url.hostname)) return "";
     return url.origin;

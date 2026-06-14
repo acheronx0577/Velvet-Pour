@@ -39,7 +39,7 @@ export function enforceContactRateLimit(request: Request): ContactRateLimitResul
         buildRateLimitedBody(evaluation.retryAfterMs),
         { status: 429 },
       ),
-      cookieTimestamps: null,
+      cookieTimestamps: evaluation.cookieTimestamps,
     };
   }
 
