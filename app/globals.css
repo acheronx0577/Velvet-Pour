@@ -586,9 +586,94 @@ html::-webkit-scrollbar {
                 @apply uppercase xl:text-base 2xl:text-lg text-base mb-2;
             }
 
-            p {
+            p:not(.form-hint):not(.contact-form-feedback):not(.contact-note) {
                 @apply lg:text-2xl 2xl:text-3xl text-sm;
             }
+        }
+
+        .contact-grid {
+            @apply grid w-full max-w-6xl mx-auto gap-10 lg:grid-cols-2 lg:gap-14 text-left;
+        }
+
+        .contact-info {
+            @apply flex flex-col gap-8 lg:gap-10;
+
+            p {
+                @apply text-white/80;
+            }
+
+            .contact-detail {
+                @apply font-sans tabular-nums;
+            }
+
+            .contact-note {
+                @apply mt-1 text-xs leading-relaxed text-white/45 md:text-sm;
+            }
+        }
+
+        .contact-form {
+            @apply relative z-10 flex flex-col gap-6 rounded-3xl border border-white/10 bg-white/6 p-6 backdrop-blur-sm md:p-8;
+        }
+
+        .contact-form-head {
+            @apply space-y-2;
+
+            h3 {
+                @apply mb-0 text-left normal-case text-3xl tracking-wide text-white md:text-4xl;
+            }
+
+            .contact-form-title {
+                @apply font-modern-negra;
+            }
+
+            .contact-user-name {
+                @apply font-sans tabular-nums;
+            }
+
+            .form-hint {
+                @apply text-sm leading-relaxed text-white/55 md:text-base;
+            }
+        }
+
+        .contact-form-eyebrow {
+            @apply font-serif text-xs uppercase tracking-[0.38em] text-yellow/80 md:text-sm;
+        }
+
+        .contact-form-fields {
+            @apply grid gap-5;
+        }
+
+        .contact-field {
+            @apply flex flex-col gap-2 text-left;
+
+            span {
+                @apply text-[0.68rem] uppercase tracking-[0.22em] text-white/55;
+            }
+
+            input,
+            textarea {
+                @apply w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3.5 text-sm text-white outline-none transition-[border-color,background-color,box-shadow] duration-300 placeholder:text-white/30 focus:border-yellow/40 focus:bg-black/45 focus:ring-2 focus:ring-yellow/15 disabled:cursor-not-allowed disabled:opacity-60 md:text-base;
+            }
+
+            textarea {
+                @apply min-h-32 resize-y;
+            }
+        }
+
+        .contact-form-feedback {
+            @apply inline-flex w-fit max-w-full items-center rounded-lg border px-2.5 py-1 text-[0.65rem] leading-tight whitespace-nowrap;
+        }
+
+        .contact-form-feedback--error {
+            @apply border-red-400/30 bg-red-500/10 text-red-200;
+        }
+
+        .contact-form-feedback--success {
+            @apply border-yellow/30 bg-yellow/10 text-yellow;
+        }
+
+        .contact-form-submit {
+            @apply inline-flex w-full items-center justify-center rounded-full border border-yellow/35 bg-yellow/10 px-5 py-3.5 uppercase tracking-[0.22em] text-[0.68rem] text-yellow transition-[background-color,color,transform,border-color] duration-300 hover:bg-yellow hover:text-black active:scale-[0.99] disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-white/5 disabled:text-white/35 md:py-3;
         }
 
         .drink-img {

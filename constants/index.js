@@ -92,6 +92,10 @@ const openingHours = [
  { day: "Sun", time: "9:00am – 1am" },
 ];
 
+const barPhone = "(012) 345-6789";
+const barEmail = "hello@velvetpour.com";
+const barAddress = "1287 Ember Lane, Suite 12, Portland, OR 97209";
+
 const socials = [
  {
 	name: "Instagram",
@@ -152,6 +156,9 @@ export {
  featureLists,
  goodLists,
  openingHours,
+ barPhone,
+ barEmail,
+ barAddress,
  socials,
  allCocktails,
 };
