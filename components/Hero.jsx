@@ -2,17 +2,21 @@
 
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
-import { SplitText } from "gsap/all";
+import { ScrollTrigger, SplitText } from "gsap/all";
 import { useRef } from "react";
 import { useMediaQuery } from "react-responsive";
 
 const Hero = () => {
+  const heroRef = useRef(null);
   const videoRef = useRef(null);
 
   const isMobile = useMediaQuery({ maxWidth: 767 });
 
   useGSAP(
     () => {
+      const video = videoRef.current;
+      if (!video) return;
+
       const heroSplit = new SplitText(".title", {
         type: "chars, words",
       });
@@ -49,35 +53,43 @@ const Hero = () => {
           },
         })
         .to(".right-leaf", { y: 200 }, 0)
-        .to(".left-leaf", { y: -200 }, 0)
-        .to(".arrow", { y: 100 }, 0);
+        .to(".left-leaf", { y: -200 }, 0);
 
       const startValue = isMobile ? "top 50%" : "center 60%";
       const endValue = isMobile ? "120% top" : "bottom top";
 
       const tl = gsap.timeline({
         scrollTrigger: {
-          trigger: "video",
+          trigger: video,
           start: startValue,
           end: endValue,
           scrub: true,
           pin: true,
+          invalidateOnRefresh: true,
         },
       });
 
-      if (videoRef.current) {
-        videoRef.current.onloadedmetadata = () => {
-          tl.to(videoRef.current, {
-            currentTime: videoRef.current.duration,
-          });
-        };
+      const bindVideoScrub = () => {
+        if (!Number.isFinite(video.duration) || video.duration <= 0) return;
+
+        tl.to(video, {
+          currentTime: video.duration,
+          ease: "none",
+        });
+        ScrollTrigger.refresh();
+      };
+
+      if (video.readyState >= 1) {
+        bindVideoScrub();
+      } else {
+        video.addEventListener("loadedmetadata", bindVideoScrub, { once: true });
       }
     },
-    { dependencies: [isMobile] }
+    { scope: heroRef, dependencies: [isMobile] }
   );
 
   return (
-    <>
+    <div ref={heroRef}>
       <section id="hero" className="noisy">
         <h1 className="title">MOJITO</h1>
 
@@ -122,7 +134,7 @@ const Hero = () => {
           src="/videos/output.mp4"
         />
       </div>
-    </>
+    </div>
   );
 };
 
