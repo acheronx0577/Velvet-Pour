@@ -231,37 +231,37 @@ const Menu = () => {
           <span>{String(totalCocktails).padStart(2, "0")}</span>
         </div>
 
-        <div className="arrows">
-          <button
-            type="button"
-            className="text-left"
-            aria-label={`Previous cocktail: ${prevCocktail.name}`}
-            onClick={() => goToSlide(displayIndex - 1)}
-          >
-            <span>{prevCocktail.name}</span>
-            <img
-              src="/images/right-arrow.png"
-              alt="right-arrow"
-              aria-hidden="true"
-            />
-          </button>
-
-          <button
-            type="button"
-            className="text-left"
-            aria-label={`Next cocktail: ${nextCocktail.name}`}
-            onClick={() => goToSlide(displayIndex + 1)}
-          >
-            <span>{nextCocktail.name}</span>
-            <img
-              src="/images/left-arrow.png"
-              alt="left-arrow"
-              aria-hidden="true"
-            />
-          </button>
-        </div>
-
         <div className="cocktail">
+          <div className="arrows">
+            <button
+              type="button"
+              className="arrow-prev"
+              aria-label={`Previous cocktail: ${prevCocktail.name}`}
+              onClick={() => goToSlide(displayIndex - 1)}
+            >
+              <span>{prevCocktail.name}</span>
+              <img
+                src="/images/right-arrow.png"
+                alt="right-arrow"
+                aria-hidden="true"
+              />
+            </button>
+
+            <button
+              type="button"
+              className="arrow-next"
+              aria-label={`Next cocktail: ${nextCocktail.name}`}
+              onClick={() => goToSlide(displayIndex + 1)}
+            >
+              <span>{nextCocktail.name}</span>
+              <img
+                src="/images/left-arrow.png"
+                alt="left-arrow"
+                aria-hidden="true"
+              />
+            </button>
+          </div>
+
           <div
             className="cocktail-stage"
             style={{ "--menu-slide-count": totalCocktails }}

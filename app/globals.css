@@ -551,10 +551,17 @@ html::-webkit-scrollbar {
     }
 
     #menu {
-        @apply relative w-full md:mt-40 mt-0 2xl:px-0 px-5 pb-20 radial-gradient;
+        @apply relative flex w-full flex-col md:mt-40 mt-0 2xl:px-0 px-5 pb-20 radial-gradient;
 
         min-height: 100dvh;
         padding-top: clamp(6.5rem, 12vh, 9rem);
+
+        @media (min-width: 1024px) {
+            max-height: 100dvh;
+            overflow: hidden;
+            padding-top: clamp(5.5rem, 10vh, 7.5rem);
+            padding-bottom: clamp(1rem, 2vh, 1.5rem);
+        }
 
         #m-left-leaf {
             @apply object-contain absolute -bottom-20 left-0 md:w-fit w-1/3;
@@ -565,50 +572,81 @@ html::-webkit-scrollbar {
         }
 
         .cocktail-tabs {
-            @apply grid md:grid-cols-4 grid-cols-2 md:gap-5 gap-3 mb-10 relative z-10 md:max-w-6xl md:mx-auto md:mb-14 pt-2 md:pt-4 lg:mb-32;
+            @apply grid shrink-0 md:grid-cols-4 grid-cols-2 relative z-10 md:max-w-6xl md:mx-auto pt-2 md:pt-4;
+
+            gap: clamp(0.65rem, 1.4vw, 1.25rem);
+            margin-bottom: clamp(1.25rem, 3vh, 8rem);
 
             button {
-                @apply min-h-16 rounded-lg border border-white/10 bg-white/4 px-3 py-3 text-center font-modern-negra text-base leading-none transition-[border-color,background-color,color,transform] duration-300 hover:border-yellow/40 hover:bg-yellow/8 hover:text-yellow active:scale-[0.99] md:min-h-18 md:text-xl lg:min-h-20 lg:text-2xl;
+                @apply rounded-lg border border-white/10 bg-white/4 text-center font-modern-negra leading-none transition-[border-color,background-color,color,transform] duration-300 hover:border-yellow/40 hover:bg-yellow/8 hover:text-yellow active:scale-[0.99];
+
+                min-height: clamp(3.25rem, 6vh, 5rem);
+                padding-inline: clamp(0.65rem, 1.2vw, 0.9rem);
+                padding-block: clamp(0.55rem, 1vh, 0.85rem);
+                font-size: clamp(0.95rem, 1.35vw, 1.5rem);
             }
         }
 
         .content {
-            @apply flex flex-col justify-between items-center container mx-auto relative;
+            @apply flex min-h-0 flex-1 flex-col items-center justify-between container mx-auto relative;
+
+            gap: clamp(0.5rem, 1.5vh, 1.25rem);
 
             .menu-overline {
-                @apply mb-6 inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs uppercase tracking-[0.22em] text-white/55;
+                @apply inline-flex shrink-0 items-center gap-3 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs uppercase tracking-[0.22em] text-white/55;
+
+                margin-bottom: clamp(0.35rem, 1vh, 1.5rem);
 
                 span:first-child,
                 span:last-child {
                     @apply text-yellow;
                 }
             }
+        }
+
+        .cocktail {
+            @apply relative flex min-h-0 w-full flex-1 flex-center;
+
+            margin-top: clamp(0rem, 1.5vh, 2.5rem);
 
             .arrows {
-                @apply pointer-events-none flex items-center justify-between w-full absolute top-1/2 z-20 -translate-y-1/2;
+                @apply pointer-events-none absolute inset-x-0 top-1/2 z-20 flex -translate-y-1/2 items-center justify-between;
 
                 button {
-                    @apply pointer-events-auto rounded-lg border border-white/10 bg-black/35 p-3 text-white backdrop-blur-sm transition-[border-color,background-color,color,transform] duration-300 hover:border-yellow/35 hover:bg-yellow/8 hover:text-yellow active:scale-[0.98] md:max-w-52 md:p-4;
+                    @apply pointer-events-auto flex flex-col rounded-lg border border-white/10 bg-black/35 text-white backdrop-blur-sm transition-[border-color,background-color,color,transform] duration-300 hover:border-yellow/35 hover:bg-yellow/8 hover:text-yellow active:scale-[0.98];
+
+                    max-width: clamp(5.5rem, 12vw, 13rem);
+                    padding: clamp(0.45rem, 1vw, 1rem);
 
                     span {
-                        @apply hidden text-2xl font-modern-negra leading-none md:block;
+                        @apply hidden font-modern-negra leading-none md:block;
+
+                        font-size: clamp(0.85rem, 1.35vw, 1.5rem);
                     }
 
                     img {
-                        @apply mt-0 size-8 object-contain opacity-80 md:mt-3 md:size-auto;
+                        @apply object-contain opacity-80;
+
+                        width: clamp(1.35rem, 2.2vw, 2.75rem);
+                        height: clamp(1.35rem, 2.2vw, 2.75rem);
+                        margin-top: clamp(0.15rem, 0.6vw, 0.75rem);
                     }
+                }
+
+                .arrow-prev {
+                    @apply items-end text-right;
+                }
+
+                .arrow-next {
+                    @apply items-start text-left;
                 }
             }
         }
 
-        .cocktail {
-            @apply flex-center mt-4 lg:mt-10;
-        }
-
         .cocktail-stage {
-            @apply relative mx-auto w-full overflow-hidden;
+            @apply relative mx-auto w-full max-h-full overflow-hidden;
 
-            height: clamp(18rem, 46vh, 30rem);
+            height: clamp(10rem, 28vh, 30rem);
         }
 
         .cocktail-track {
@@ -622,7 +660,9 @@ html::-webkit-scrollbar {
         }
 
         .recipe {
-            @apply relative mt-8 w-full lg:absolute lg:bottom-0 lg:mt-0;
+            @apply relative z-10 w-full shrink-0;
+
+            margin-top: clamp(0.75rem, 2vh, 2rem);
         }
 
         .recipe-stage {
@@ -635,30 +675,41 @@ html::-webkit-scrollbar {
         }
 
         .recipe-panel {
-            @apply flex max-md:flex-col gap-5 md:items-start justify-between w-full shrink-0 grow-0 lg:gap-10 lg:items-center;
+            @apply flex max-md:flex-col justify-between w-full shrink-0 grow-0 md:items-end;
             flex-basis: calc(100% / var(--menu-slide-count, 4));
 
+            gap: clamp(0.85rem, 2vw, 2.5rem);
+
             .info {
-                @apply space-y-2 lg:space-y-4 lg:translate-y-20;
+                @apply space-y-2;
 
                 p {
                     @apply text-white/70;
                 }
 
                 .cocktail-name {
-                    @apply font-modern-negra text-3xl text-yellow max-w-none leading-[0.95] md:text-4xl lg:text-6xl;
+                    @apply font-modern-negra text-yellow max-w-none leading-[0.95];
+
+                    font-size: clamp(1.65rem, 3.2vw, 3.75rem);
                 }
             }
 
             .details {
-                @apply space-y-3 md:max-w-md text-left lg:space-y-5;
+                @apply flex flex-col text-left;
+
+                max-width: clamp(16rem, 34vw, 28rem);
+                gap: clamp(0.45rem, 1vh, 1.25rem);
 
                 h2 {
-                    @apply text-3xl font-serif md:text-4xl lg:text-5xl;
+                    @apply font-serif;
+
+                    font-size: clamp(1.35rem, 2.4vw, 3rem);
                 }
 
                 p {
-                    @apply md:text-lg pe-5;
+                    @apply pe-5 leading-snug;
+
+                    font-size: clamp(0.9rem, 1.2vw, 1.125rem);
                 }
             }
         }
