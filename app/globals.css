@@ -568,7 +568,7 @@ html::-webkit-scrollbar {
         @apply relative md:mt-20 mt-0 px-4 text-center w-full overflow-hidden radial-gradient;
 
         #f-left-leaf {
-            @apply absolute bottom-0 left-0 pointer-events-none lg:w-fit w-1/3;
+            @apply object-contain absolute -bottom-2 left-0 pointer-events-none lg:w-fit w-1/3;
         }
 
         #f-right-leaf {
