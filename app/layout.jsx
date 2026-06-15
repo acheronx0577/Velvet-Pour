@@ -3,7 +3,7 @@ import "./globals.css";
 import SmoothScroll from "@/components/SmoothScroll";
 
 export const metadata = {
-  title: "Velvet Pour | GSAP Cocktails",
+  title: "Velvet Pour",
   description:
     "A scroll-driven cocktail landing page built with Next.js, GSAP, and Tailwind CSS.",
   icons: {
