@@ -1,6 +1,6 @@
 import { httpRouter } from "convex/server";
 import { httpAction, type ActionCtx } from "./_generated/server";
-import { internal } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import { isAuthorized } from "./lib/bearerAuth";
 import { hashIp } from "./lib/ipHash";
 import { verifySignedIpHint } from "./lib/ipHintAuth";
@@ -91,6 +91,36 @@ http.route({
     }
 
     return submitContact(ctx, body);
+  }),
+});
+
+http.route({
+  path: "/api/site-views/get",
+  method: "GET",
+  handler: httpAction(async (ctx) => {
+    try {
+      const count = await ctx.runQuery(api.siteViews.get, {});
+      return jsonResponse({ ok: true, count }, 200);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return jsonResponse({ ok: false, error: message }, 400);
+    }
+  }),
+});
+
+http.route({
+  path: "/api/site-views/increment",
+  method: "POST",
+  handler: httpAction(async (ctx) => {
+    try {
+      const count = await ctx.runMutation(api.siteViews.increment, {
+        incrementBy: 1,
+      });
+      return jsonResponse({ ok: true, count }, 200);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return jsonResponse({ ok: false, error: message }, 400);
+    }
   }),
 });
 

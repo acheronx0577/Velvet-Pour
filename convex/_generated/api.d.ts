@@ -19,6 +19,7 @@ import type * as lib_isIpAddress from "../lib/isIpAddress.js";
 import type * as lib_rateLimit from "../lib/rateLimit.js";
 import type * as lib_resend from "../lib/resend.js";
 import type * as lib_validation from "../lib/validation.js";
+import type * as siteViews from "../siteViews.js";
 
 import type {
   ApiFromModules,
@@ -38,6 +39,7 @@ declare const fullApi: ApiFromModules<{
   "lib/rateLimit": typeof lib_rateLimit;
   "lib/resend": typeof lib_resend;
   "lib/validation": typeof lib_validation;
+  siteViews: typeof siteViews;
 }>;
 
 /**

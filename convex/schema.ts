@@ -21,4 +21,9 @@ export default defineSchema({
     ipHash: v.string(),
     createdAt: v.number(),
   }).index("by_ip_created", ["ipHash", "createdAt"]),
+
+  siteViews: defineTable({
+    key: v.string(),
+    count: v.number(),
+  }).index("by_key", ["key"]),
 });

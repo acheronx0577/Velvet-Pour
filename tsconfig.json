@@ -44,6 +44,7 @@
     ".next",
     "convex",
     "test",
-    "**/*.test.ts"
+    "**/*.test.ts",
+    "Ai-Agent-Companion-main"
   ]
 }

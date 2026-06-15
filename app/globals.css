@@ -892,4 +892,128 @@ html::-webkit-scrollbar {
             @apply absolute bottom-0 right-0 lg:w-96 w-1/3 pointer-events-none;
         }
     }
+
+    .site-hub {
+        @apply fixed top-1/2 left-0 z-50 -translate-y-1/2 pointer-events-none;
+    }
+
+    .site-hub-shell {
+        @apply pointer-events-auto flex items-stretch overflow-hidden rounded-r-[1.35rem] border border-l-0 border-yellow/30 bg-[rgb(6_6_6/0.9)] shadow-[0_16px_44px_rgba(0,0,0,0.55)];
+        -webkit-backdrop-filter: blur(18px) saturate(125%);
+        backdrop-filter: blur(18px) saturate(125%);
+        isolation: isolate;
+        transform: translateZ(0);
+    }
+
+    .site-hub-toggle {
+        @apply flex size-10 shrink-0 items-center justify-center self-center border-0 bg-transparent text-yellow transition-colors duration-300 hover:text-yellow/90;
+    }
+
+    .site-hub-chevron {
+        @apply block size-2.5 border-r-2 border-b-2 border-current transition-transform duration-300 ease-out;
+        transform: rotate(-45deg) translateX(-1px);
+    }
+
+    .site-hub.is-open .site-hub-chevron {
+        transform: rotate(135deg) translate(-1px, 1px);
+    }
+
+    .site-hub-panel {
+        @apply max-w-0 overflow-hidden;
+        transition: max-width 0.38s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .site-hub.is-open .site-hub-panel {
+        @apply max-w-[min(15rem,82vw)];
+    }
+
+    .site-hub-inner {
+        @apply flex w-[min(15rem,82vw)] min-w-[min(15rem,82vw)] flex-col gap-3 border-l border-yellow/15 py-3 pr-3 pl-2.5;
+    }
+
+    .site-hub-stack {
+        @apply flex flex-col gap-2.5;
+    }
+
+    .site-hub-views-pill {
+        @apply flex items-center justify-between gap-2 rounded-full border border-white/12 bg-white/5 px-3 py-2 text-[0.78rem] font-semibold tracking-[0.02em];
+    }
+
+    .site-hub-views-label {
+        @apply min-w-0 truncate text-white/55 font-medium;
+    }
+
+    .site-hub-views-value {
+        @apply shrink-0 font-sans text-white tabular-nums;
+    }
+
+    .site-hub-metrics {
+        @apply rounded-2xl border border-white/10 bg-white/4 px-3 py-2.5;
+    }
+
+    .site-hub-metrics-label {
+        @apply mb-2 text-[0.68rem] font-medium uppercase tracking-[0.18em] text-yellow/75;
+    }
+
+    .site-hub-metrics-grid {
+        @apply m-0 grid grid-cols-2 gap-x-3 gap-y-2;
+    }
+
+    .site-hub-metrics-row {
+        @apply flex min-w-0 flex-col gap-0.5;
+    }
+
+    .site-hub-metrics-row dt {
+        @apply m-0 text-[0.64rem] font-medium uppercase tracking-[0.14em] text-white/45;
+    }
+
+    .site-hub-metrics-row dd {
+        @apply m-0 text-[0.82rem] font-semibold leading-tight text-white tabular-nums;
+    }
+
+    .site-hub-metrics-row dd.is-ok {
+        @apply text-yellow;
+    }
+
+    .site-hub-metrics-row dd.is-warn {
+        @apply text-[#f0b86e];
+    }
+
+    .site-hub-metrics-row dd.is-hot {
+        @apply text-[#f08c7a];
+    }
+
+    .site-hub-github {
+        @apply inline-flex w-full items-center justify-center gap-2 rounded-full border border-white/12 bg-white/5 px-3 py-2 text-[0.78rem] font-semibold tracking-[0.02em] text-white no-underline transition-[background-color,border-color,color] duration-300 hover:border-yellow/35 hover:bg-yellow/8 hover:text-yellow;
+    }
+
+    .site-hub-github-icon {
+        @apply shrink-0;
+    }
+
+    @media (max-width: 767px) {
+        .site-hub-shell {
+            @apply rounded-r-[1.15rem];
+        }
+
+        .site-hub-toggle {
+            @apply size-9;
+        }
+
+        .site-hub.is-open .site-hub-panel {
+            @apply max-w-[min(13.5rem,78vw)];
+        }
+
+        .site-hub-inner {
+            @apply w-[min(13.5rem,78vw)] min-w-[min(13.5rem,78vw)] py-2.5 pr-2.5 pl-2;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .site-hub-panel,
+        .site-hub-chevron,
+        .site-hub-toggle {
+            @apply transition-none;
+        }
+    }
 }

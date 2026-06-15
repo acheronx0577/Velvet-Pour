@@ -699,9 +699,34 @@ function isNextErrorHead(plain) {
 }
 
 function isNextErrorDetail(plain) {
-  return /^(Module not found:|Error:|Syntax error:|Type error:|Caused by:|Import trace for requested module:)/i.test(
+  return /^(Module not found:|Error:|Syntax error:|Type error:|Caused by:|Import trace for requested module:|ReferenceError:|Parsing ecmascript|Unexpected token)/i.test(
     plain,
   );
+}
+
+function isCompileTraceNoise(line) {
+  const trimmed = line.trim();
+  return (
+    /^Import traces:/i.test(trimmed) ||
+    /^(Client Component|Server Component)/i.test(trimmed) ||
+    /^\.\/(components|app)\//i.test(trimmed) ||
+    /^digest:/i.test(trimmed) ||
+    trimmed === "}"
+  );
+}
+
+function isNextDevNoise(plain) {
+  const trimmed = normalizeStreamPlain(plain).trim();
+  if (!trimmed) {
+    return true;
+  }
+  if (isCompileTraceNoise(trimmed)) {
+    return true;
+  }
+  if (/^Parsing ecmascript source code failed$/i.test(trimmed)) {
+    return true;
+  }
+  return false;
 }
 
 function isNextErrorContinuation(plain) {
@@ -755,12 +780,55 @@ function classifyNextCompileError(buffer) {
   }
 
   const errorLine = details.find((line) => /^Error:/i.test(line));
+  const refLine = details.find((line) => /^ReferenceError:/i.test(line));
+  const parseLine = details.find((line) =>
+    /Parsing ecmascript source code failed/i.test(line),
+  );
+  const tokenLine = details.find((line) => /^Unexpected token/i.test(line));
+  const fileLine = details.find((line) =>
+    /^[\w./\\-]+\.(?:jsx|tsx|js|ts):\d+:\d+$/.test(line.trim()),
+  );
+
+  if (parseLine || tokenLine) {
+    return {
+      error: "parse error",
+      cause: tokenLine?.trim() ?? "source code failed to parse",
+      location: fileLine?.trim() ?? location,
+      extras: details.filter(
+        (line) =>
+          line !== parseLine &&
+          line !== tokenLine &&
+          line !== fileLine &&
+          !isCompileTraceNoise(line),
+      ),
+    };
+  }
+
+  if (refLine) {
+    return {
+      error: "runtime error",
+      cause: refLine.replace(/^ReferenceError:\s*/i, "").trim(),
+      location: fileLine?.trim() ?? location,
+      extras: details.filter(
+        (line) => line !== refLine && line !== fileLine && !isCompileTraceNoise(line),
+      ),
+    };
+  }
+
   return {
     error: "compile error",
     cause:
-      errorLine?.replace(/^Error:\s*/i, "") ?? (location || "build failed"),
-    location: errorLine ? location : "",
-    extras: details.filter((line) => line !== errorLine),
+      errorLine?.replace(/^Error:\s*/i, "") ??
+      refLine?.replace(/^ReferenceError:\s*/i, "") ??
+      (location || "build failed"),
+    location: errorLine || refLine ? location : "",
+    extras: details.filter(
+      (line) =>
+        line !== errorLine &&
+        line !== refLine &&
+        line !== fileLine &&
+        !isCompileTraceNoise(line),
+    ),
   };
 }
 
@@ -823,6 +891,14 @@ function splitNextWarningBody(body) {
 }
 
 function formatNextWarningRows(plain) {
+  if (/Fast Refresh had to perform a full reload/i.test(plain)) {
+    const short = plain
+      .replace(/^⚠\s*/, "")
+      .replace(/\s*Read more:\s+\S+$/i, "")
+      .trim();
+    return [nextRow(`${AMBER("⚠")} ${DIM(short)}`)];
+  }
+
   const parts = splitNextWarningBody(plain.replace(/^⚠\s*/, ""));
   const rows = [nextRow(`${AMBER("⚠")} ${AMBER(parts[0])}`)];
   for (const part of parts.slice(1)) {
@@ -1017,6 +1093,41 @@ function formatRscPayloadSummary(buffer) {
       `${AMBER("⚠")} ${AMBER("nav")} ${DIM("·")} ${DIM(`RSC fetch failed for ${target}`)} ${DIM("·")} ${DIM(schemeHint)}`,
     ),
   ];
+}
+
+function isBrowserRuntimeLine(plain) {
+  return /^\[browser\]\s+Uncaught/i.test(plain);
+}
+
+function isBrowserRuntimeContext(plain) {
+  if (nextBrowserMode !== "runtime") {
+    return false;
+  }
+  const trimmed = stripBrowserPrefix(plain).trim();
+  return /\bat \S+/.test(trimmed) || /^\(components\//i.test(trimmed);
+}
+
+function formatBrowserRuntimeSummary(buffer) {
+  const full = buffer.map(stripBrowserPrefix).join("\n");
+  const errMatch = full.match(/Uncaught (\w+Error?):\s*(.+)/);
+  const atMatch = full.match(/at (\S+)(?: \(([^)]+)\))?/);
+  const error = errMatch?.[1] ?? "Error";
+  const cause = (errMatch?.[2] ?? "runtime failure").split("\n")[0].trim();
+  const clipped = cause.length > 72 ? `${cause.slice(0, 69)}…` : cause;
+
+  const rows = [
+    nextRow(
+      `${ERROR_BADGE}  ${BOLD(BRIGHT(error))} ${DIM("·")} ${BRIGHT(clipped)}`,
+      { error: true },
+    ),
+  ];
+  if (atMatch) {
+    const target = atMatch[2]
+      ? `${atMatch[1]} (${atMatch[2]})`
+      : atMatch[1];
+    rows.push(nextWarningDetailRow(DIM(`at ${target}`)));
+  }
+  return rows;
 }
 
 function isCssBuildErrorLine(plain) {
@@ -1937,7 +2048,7 @@ const nextErrorBuffer = [];
 const convexErrorBuffer = [];
 /** @type {string[]} */
 const nextBrowserBuffer = [];
-/** @type {"hydration" | "lcp" | "rsc" | null} */
+/** @type {"hydration" | "lcp" | "rsc" | "runtime" | null} */
 let nextBrowserMode = null;
 /** @type {ReturnType<typeof setTimeout> | null} */
 let nextBrowserFlushTimer = null;
@@ -1948,10 +2059,18 @@ let lastHydrationSummaryAt = 0;
 let lastRscSummaryKey = null;
 let lastRscSummaryAt = 0;
 const HYDRATION_SUMMARY_COOLDOWN_MS = 30000;
+const COMPILE_ERROR_HYDRATION_SUPPRESS_MS = 15000;
 const RSC_SUMMARY_COOLDOWN_MS = 30000;
+let lastCompileErrorAt = 0;
 const BROWSER_FLUSH_MS = 400;
 
 function shouldEmitHydrationSummary(buffer) {
+  if (nextErrorBuffer.length > 0) {
+    return false;
+  }
+  if (Date.now() - lastCompileErrorAt < COMPILE_ERROR_HYDRATION_SUPPRESS_MS) {
+    return false;
+  }
   const key = hydrationSummaryKey(buffer);
   const now = Date.now();
   if (
@@ -2059,9 +2178,14 @@ function flushNextBrowserBuffer(prefix = tagFor("next")) {
         ? flattenNextFormatted(formatLcpWarningRows(nextBrowserBuffer))
         : nextBrowserMode === "rsc"
           ? flattenNextFormatted(formatRscPayloadSummary(nextBrowserBuffer))
-          : flattenNextFormatted(
-              formatNextBrowserMiscRows(nextBrowserBuffer.join(" ")),
-            );
+          : nextBrowserMode === "runtime"
+            ? flattenNextFormatted(
+                formatBrowserRuntimeSummary(nextBrowserBuffer),
+                { error: true },
+              )
+            : flattenNextFormatted(
+                formatNextBrowserMiscRows(nextBrowserBuffer.join(" ")),
+              );
 
   nextBrowserBuffer.length = 0;
   nextBrowserMode = null;
@@ -2072,6 +2196,7 @@ function flushNextErrorBuffer(prefix = tagFor("next")) {
   if (!nextErrorBuffer.length) {
     return;
   }
+  lastCompileErrorAt = Date.now();
   const formatted = flattenNextFormatted(formatNextErrorBlock(nextErrorBuffer), {
     error: true,
   });
@@ -2388,6 +2513,9 @@ function emitPart(part, prefix, formatLine, sourceName) {
   }
 
   const plain = normalizeStreamPlain(part);
+  if (sourceName === "next" && isNextDevNoise(plain)) {
+    return;
+  }
   if (sourceName === "next") {
     if (isLcpImageWarning(plain) || isLcpContinuationLine(plain)) {
       if (nextBrowserMode !== "lcp") {
@@ -2403,12 +2531,25 @@ function emitPart(part, prefix, formatLine, sourceName) {
     }
 
     if (isHydrationTreeLine(plain)) {
+      if (nextErrorBuffer.length) {
+        return;
+      }
       if (!nextBrowserMode) {
         flushNextBrowserBuffer(prefix);
         nextBrowserMode = "hydration";
       }
       nextBrowserBuffer.push(plain);
       scheduleHydrationFlush(prefix);
+      return;
+    }
+
+    if (isBrowserRuntimeLine(plain) || isBrowserRuntimeContext(plain)) {
+      if (nextBrowserMode !== "runtime") {
+        flushNextBrowserBuffer(prefix);
+        nextBrowserMode = "runtime";
+      }
+      nextBrowserBuffer.push(plain);
+      scheduleBrowserFlush(prefix);
       return;
     }
 
@@ -2430,6 +2571,12 @@ function emitPart(part, prefix, formatLine, sourceName) {
 
     if (isNextBrowserMisc(plain)) {
       flushNextBrowserBuffer(prefix);
+      if (/^\[browser\]\s+Uncaught/i.test(plain)) {
+        nextBrowserMode = "runtime";
+        nextBrowserBuffer.push(plain);
+        scheduleBrowserFlush(prefix);
+        return;
+      }
       emitFormatted("next", prefix, formatNextBrowserMiscRows(plain));
       return;
     }

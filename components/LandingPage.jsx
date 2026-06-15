@@ -10,12 +10,14 @@ import Contact from "@/components/Contact";
 import Hero from "@/components/Hero";
 import Menu from "@/components/Menu";
 import Navbar from "@/components/Navbar";
+import SiteHub from "@/components/SiteHub";
 
 gsap.registerPlugin(ScrollTrigger, SplitText);
 
 export default function LandingPage() {
   return (
     <main>
+      <SiteHub />
       <Navbar />
       <Hero />
       <Cocktails />
